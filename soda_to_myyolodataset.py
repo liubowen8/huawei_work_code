@@ -12,11 +12,10 @@ import shutil
 
 
 # voc数据集根目录以及版本
-soda_root = "/home/mdc-safety/mdc-data/SODA10M/SSLAD-2D/labeled"
-soda_train="/home/mdc-safety/mdc-data/SODA10M/SSLAD-2D/labeled/train"
-soda_val="/home/mdc-safety/mdc-data/SODA10M/SSLAD-2D/labeled/val"
-annotations_json_path="/home/mdc-safety/mdc-data/SODA10M/SSLAD-2D/labeled/annotations/"
-voc_version = "VOC2012"
+soda_root = "/home/ifpp/ye/datasets/SODA10M/SSLAD-2D/labeled"
+soda_train="/home/ifpp/ye/datasets/SODA10M/SSLAD-2D/labeled/train"
+soda_val="/home/ifpp/ye/datasets/SODA10M/SSLAD-2D/labeled/val"
+annotations_json_path="/home/ifpp/ye/datasets/SODA10M/SSLAD-2D/labeled/annotations/"
 
 # 转换的训练集以及验证集对应txt文件
 train_txt = "train.txt"
@@ -26,7 +25,7 @@ val_txt = "val.txt"
 save_file_root = "./my_yolo_dataset"
 
 # label标签对应json文件
-label_json_path = '/home/mdc-safety/mdc-data/l/soda_classes.json'
+label_json_path = '/home/ifpp/liubowen/code/deep-learning-for-image-processing/pytorch_object_detection/yolov3_spp/data/soda_classes.json'
 
 # 检查文件/文件夹都是否存在
 assert os.path.exists(label_json_path), "label_json_path does not exist..."
@@ -63,7 +62,9 @@ def translate_info(file_names: list, save_root: str, class_dict: dict, annotatio
         #"category_id": 3, "bbox": [65, 667, 174, 126], "area": 21924, "id": 1, "iscrowd": 0
         category_id=object_info["category_id"]
         bbox=object_info["bbox"]
-        xcenter, ycenter, w, h= bbox
+        left, top, w, h= bbox 
+        xcenter=left+w/2
+        ycenter=top+h/2
         #"height": 1080, "width": 1920,
         image_info=image_infos[image_id-1]
         image_height=image_info["height"]
@@ -76,11 +77,12 @@ def translate_info(file_names: list, save_root: str, class_dict: dict, annotatio
             ycenter = round(ycenter / image_height, 6)
             w = round(w / image_width, 6)
             h = round(h / image_height, 6)
-            info = [str(i) for i in [class_index, xcenter, ycenter, w, h]]
-            if os.path.getsize(os.path.join(save_txt_path, file + ".txt")):
-                f.write("\n" + " ".join(info))
-            else:
-                f.write(" ".join(info))
+            if 0<=xcenter<=1 and 0<=ycenter<=1 and w<=1 and h<=1 :
+                info = [str(i) for i in [class_index, xcenter, ycenter, w, h]]
+                if os.path.getsize(os.path.join(save_txt_path, file + ".txt")):
+                    f.write("\n" + " ".join(info))
+                else:
+                    f.write(" ".join(info))
                 
 
     for file in tqdm(file_names, desc="translate {} file...".format(train_val)):
